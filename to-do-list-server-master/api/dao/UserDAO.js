@@ -18,6 +18,9 @@ class UserDAO extends GlobalDAO {
   constructor() {
     super(User);
   }
+  async findByEmail(email) {
+    return User.findOne({ email });
+  }
 }
 
 /**

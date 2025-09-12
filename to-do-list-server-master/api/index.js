@@ -1,5 +1,6 @@
 const express = require("express");
 require("dotenv").config();
+console.log(">>> ENV MONGO_URI:", process.env.MONGO_URI);
 
 const cors = require("cors");
 const routes = require("./routes/routes.js");
@@ -27,7 +28,7 @@ connectDB();
  * Mount the API routes.
  * All feature routes are grouped under `/api/v1`.
  */
-app.use("/api/v1", routes);
+app.use("/api/v1", require("./routes/routes"));
 
 /**
  * Health check endpoint.

@@ -22,6 +22,14 @@ const UserSchema = new mongoose.Schema(
          * @required
          */
         password: { type: String, required: true },
+         /**
+         * The password of the user.
+         * Stored as plain text here, but should be hashed
+         * before saving in a production environment.
+         * @type {String}
+         * @required
+         */
+         email: { type: String, required: true },
     },
     {
         /**

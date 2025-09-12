@@ -25,3 +25,12 @@ import { http } from '../api/http.js';
 export async function registerUser({ username, email, password }) {
   return http.post('/api/v1/users', { username, email, password });
 }
+/**
+ * Login user
+ * @param {Object} params - Login data
+ * @param {string} params.email - User email
+ * @param {string} params.password - User password
+ */
+export async function loginUser({ email, password }) {
+  return http.post('/api/v1/auth/login', { email, password });
+}

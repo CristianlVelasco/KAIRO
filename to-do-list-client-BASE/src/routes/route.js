@@ -1,4 +1,4 @@
-import { registerUser } from '../services/userService.js';
+import { loginUser, registerUser } from '../services/userService.js';
 
 const app = document.getElementById('app');
 
@@ -47,11 +47,22 @@ export function initRouter() {
  * Fallback to 'home' if the route is unknown.
  */
 function handleRoute() {
-  const path = (location.hash.startsWith('#/') ? location.hash.slice(2) : '') || 'home';
+  const path = (location.hash.startsWith('#/') ? location.hash.slice(2) : '') || 'login';
   const known = ['home', 'board', 'login', 'register', 'forgot'];
-  const route = known.includes(path) ? path : 'home';
+  const route = known.includes(path) ? path : 'login';
 
   const viewName = route === 'home' ? 'register' : route;
+
+  // Validar sesión antes de entrar al board
+  const token = localStorage.getItem('token');
+  if (route === 'board' && !token) {
+    return loadView('login');
+  }
+
+  // Si ya tengo token y estoy en login/registro → mandar al board
+  if ((route === 'login' || route === 'register') && token) {
+    return loadView('board');
+  }
 
   loadView(viewName).catch(err => {
     console.error(err);
@@ -65,7 +76,12 @@ function handleRoute() {
  * Initialize the "home" view.
  * Attaches a submit handler to the register form to navigate to the board.
  */
+
 function initHome() {
+  console.log('Home view loaded');
+}
+
+function initRegister() {
   const form = document.getElementById('registerForm');
   if (!form) return;
 
@@ -103,6 +119,39 @@ function initHome() {
   });
 }
 
+function initLogin() {
+  const form = document.getElementById('loginForm');
+  if (!form) return;
+
+  const emailInput = document.getElementById('lemail');
+  const passInput  = document.getElementById('lpassword');
+  const msg        = document.getElementById('loginMsg');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (msg) msg.textContent = '';
+
+    const email = emailInput?.value.trim();
+    const password = passInput?.value.trim();
+
+    if (!email || !password) {
+      if (msg) msg.textContent = 'Ingresa tu correo y contraseña.';
+      return;
+    }
+
+    try {
+      const data = await loginUser({ email, password });
+
+      // Guardar token en localStorage
+      localStorage.setItem('token', data.token);
+
+      // Redirigir al tablero
+      location.hash = '#/board';
+    } catch (err) {
+      if (msg) msg.textContent = `Error al iniciar sesión: ${err.message}`;
+    }
+  });
+}
 /**
  * Initialize the "board" view.
  * Sets up the todo form, input, and list with create/remove/toggle logic.
@@ -165,6 +214,16 @@ function initBoard() {
       list.hidden = true;
     }
   });
+
+  // Logout button
+  const logoutBtn = document.getElementById('profileBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('token');
+      location.hash = '#/login';
+    });
+  }
+
 
   // Optional: search support for Kairo search form
   const searchForm = document.getElementById('searchForm');

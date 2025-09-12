@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+const UserDAO = require("../dao/UserDAO");
+const jwt = require("jsonwebtoken");
 
 const UserController = require("../controllers/UserController");
 
@@ -26,6 +28,37 @@ router.get("/:id", (req, res) => UserController.read(req, res));
  * @access Public
  */
 router.post("/", (req, res) => UserController.create(req, res));
+/**
+ * @route POST /users/login
+ * @description Login de usuario.
+ * @body {string} email
+ * @body {string} password
+ */
+// Login
+router.post("/login", async (req, res) => {
+    const { email, password } = req.body;
+  
+    try {
+      const user = await UserDAO.findByEmail(email);
+      if (!user) {
+        return res.status(400).json({ message: "Usuario no encontrado" });
+      }
+  
+      // ⚠️ Si usas bcrypt, aquí va la comparación con bcrypt.compare
+      if (user.password !== password) {
+        return res.status(400).json({ message: "Contraseña incorrecta" });
+      }
+  
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || "secreto123", {
+        expiresIn: "1h",
+      });
+  
+      res.json({ token });
+    } catch (err) {
+      res.status(500).json({ message: "Error en el servidor", error: err.message });
+    }
+  });
+
 
 /**
  * @route PUT /users/:id
